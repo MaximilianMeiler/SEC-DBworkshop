@@ -29,13 +29,21 @@
     }
 
     div {
+      margin-left: 25px;
+      padding: 10px 0;
+      /* border: 1px solid black; */
+      width:80%;
+      text-align: right;
+    }
+
+    p {
       margin-left: 5px;
       margin-top: 15px;
-      padding: 10px 0;
+      padding: 10px 10px;
       border: 1px solid black;
       width:80%;
-      text-align: center;
-      margin-bottom: 20px;
+      text-align: left;
+      margin-bottom: 0px;
     }
   </style>
 </head>
@@ -43,12 +51,12 @@
   <h1>Not Twitter</h1>
   <textarea type="text" id="post-input" value="Enter a fact here!"></textarea>
   <button id="post-button">Post!</button>
-  <div></div>
-  <button id="random-button">Get random fact</button>
-  <button id="index-button">Get fact at index</button>
-  <div id="fact-display">Loading posts...</div>
+  <h2 id="loading-tag">Loading posts...</h2>
+  <div id="post-display"></div>
 
   <script>
+
+    let username;
     
     const createPost = async (data) => {
       await fetch(`http://localhost:3000/createPost`, {
@@ -56,76 +64,48 @@
         headers: {
           "content-type": "application/json"
         },
-        body: JSON.stringify({
-          message: data
-        })
+        body: JSON.stringify(data)
       }).then(res => res.json());
+
+      await getRecentPosts()
     }
 
     const getRecentPosts = async (data) => {
+      document.getElementById("loading-tag").innerText = "Loading posts..."
+
       let results = await fetch(`http://localhost:3000/getRecentPosts`)
       .then(res => res.json())
 
-      document.getElementById("fact-display").innerText = ""
+      document.getElementById("loading-tag").innerText = ""
+      document.getElementById("post-display").innerHTML = ""
 
       results.map(post => {
-        let element = document.createElement("div");
-        element.innerText = post.message;
-        document.getElementById("fact-display").appendChild(element)
+        let parent = document.createElement("div");
+
+        let msg = document.createElement("p");
+        msg.innerText = post.message ? post.message : "";
+        let user = document.createElement("div");
+        user.innerText = post.user ? post.user : "Anonymous";
+
+        parent.appendChild(msg);
+        parent.appendChild(user);
+
+        document.getElementById("post-display").appendChild(parent)
       })
     }
 
 
     window.addEventListener("load", async (event) => {
-      console.log("loaded")
+      username = prompt("Enter your username: ");
       await getRecentPosts();
     });
 
     document.getElementById("post-button").addEventListener("click", async () => {
-      let fact = document.getElementById("post-input").value;
+      let postInput = document.getElementById("post-input").value;
       document.getElementById("post-input").value = "";
-      await createPost(fact)
+      let post = {message: postInput, user: username}
+      await createPost(post)
     })
-
-
-
-
-
-    document.getElementById("random-button").addEventListener("click", () => {
-      getRandomFact();
-    })
-
-    document.getElementById("index-button").addEventListener("click", () => {
-      let index = document.getElementById("index-input").value;
-      getFactByIndex(index)
-    })
-
-    const getRandomFact = async () => {
-      let results = await fetch("http://localhost:3000/random");
-      results = await results.text();
-      document.getElementById("fact-display").innerText = results;
-    }
-
-    const getFactByIndex = async (index) => {
-      let results = await fetch(`http://localhost:3000/fact?index=${index}`)
-      results = await results.text();
-      document.getElementById("fact-display").innerText = results;
-    }
-
-
-
-    const postNewFact = async (fact) => {
-      let results = await fetch("http://localhost:3000/new", {
-        method: "post",  
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({fact: fact})
-      })
-      results = await results.text();
-
-      alert(results)
-    }
 
   </script>
 </body>

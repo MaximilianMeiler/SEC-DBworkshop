@@ -24,16 +24,20 @@ app.listen(port, async () => {
 app.get("/getRecentPosts", async (req, res) => {
   let results = await collection.find({})
   .limit(50)
+  .sort({ _id : -1 })
   .toArray();
   
   res.send(results).status(200);
 })
 
 
-app.post("/createPost", async (req, res) => {
-  let newDocument = req.body;
-  newDocument.date = new Date();
 
-  result = await collection.insertOne(newDocument);
+
+app.post("/createPost", async (req, res) => {
+  let newPost = req.body;
+  newPost.date = new Date();
+  //can also use spread operator: newPost = {...newPost, date: new Date(), likes: 0}
+
+  result = await collection.insertOne(newPost);
   res.send(result).status(204);
 });
