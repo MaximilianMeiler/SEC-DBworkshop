@@ -6,8 +6,8 @@ require('dotenv').config()
 const app = express()
 const port = process.env.PORT || 3000;
 const connectionString = process.env.ATLAS_URI || "";
-console.log(connectionString)
 const client = new MongoClient(connectionString);
+let collection;
 
 app.use(cors({origin: '*'}));
 app.use(express.json());
@@ -17,11 +17,23 @@ app.listen(port, async () => {
   console.log(`Example app listening on port ${port}`)
 
   await client.connect();
-  await listDatabases(client);
+  let database = client.db("databaseName");
+  collection = await database.collection("collectionName");
 })
 
-async function listDatabases(client){
-  databasesList = await client.db().admin().listDatabases();
-  console.log("Databases:");
-  databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-};
+app.get("/getRecentPosts", async (req, res) => {
+  let results = await collection.find({})
+  .limit(50)
+  .toArray();
+  
+  res.send(results).status(200);
+})
+
+
+app.post("/createPost", async (req, res) => {
+  let newDocument = req.body;
+  newDocument.date = new Date();
+
+  result = await collection.insertOne(newDocument);
+  res.send(result).status(204);
+});

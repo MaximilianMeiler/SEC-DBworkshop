@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database application</title>
+  <style>
+    * {
+      font-family: sans-serif;
+    }
+
+    button {
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 5px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+
+    textarea {
+      border-radius: 5px;
+      border: 1px solid black;
+      padding: 4px 4px;
+      margin-left: 5px;
+      height: 40px;
+      width: 900px;
+    }
+
+    div {
+      margin-left: 5px;
+      margin-top: 15px;
+      padding: 10px 0;
+      border: 1px solid black;
+      width:80%;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Not Twitter</h1>
+  <textarea type="text" id="post-input" value="Enter a fact here!"></textarea>
+  <button id="post-button">Post!</button>
+  <div></div>
+  <button id="random-button">Get random fact</button>
+  <button id="index-button">Get fact at index</button>
+  <div id="fact-display">Loading posts...</div>
+
+  <script>
+    
+    const createPost = async (data) => {
+      await fetch(`http://localhost:3000/createPost`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          message: data
+        })
+      }).then(res => res.json());
+    }
+
+    const getRecentPosts = async (data) => {
+      let results = await fetch(`http://localhost:3000/getRecentPosts`)
+      .then(res => res.json())
+
+      document.getElementById("fact-display").innerText = ""
+
+      results.map(post => {
+        let element = document.createElement("div");
+        element.innerText = post.message;
+        document.getElementById("fact-display").appendChild(element)
+      })
+    }
+
+
+    window.addEventListener("load", async (event) => {
+      console.log("loaded")
+      await getRecentPosts();
+    });
+
+    document.getElementById("post-button").addEventListener("click", async () => {
+      let fact = document.getElementById("post-input").value;
+      document.getElementById("post-input").value = "";
+      await createPost(fact)
+    })
+
+
+
+
+
+    document.getElementById("random-button").addEventListener("click", () => {
+      getRandomFact();
+    })
+
+    document.getElementById("index-button").addEventListener("click", () => {
+      let index = document.getElementById("index-input").value;
+      getFactByIndex(index)
+    })
+
+    const getRandomFact = async () => {
+      let results = await fetch("http://localhost:3000/random");
+      results = await results.text();
+      document.getElementById("fact-display").innerText = results;
+    }
+
+    const getFactByIndex = async (index) => {
+      let results = await fetch(`http://localhost:3000/fact?index=${index}`)
+      results = await results.text();
+      document.getElementById("fact-display").innerText = results;
+    }
+
+
+
+    const postNewFact = async (fact) => {
+      let results = await fetch("http://localhost:3000/new", {
+        method: "post",  
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({fact: fact})
+      })
+      results = await results.text();
+
+      alert(results)
+    }
+
+  </script>
+</body>
+</html>
